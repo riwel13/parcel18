@@ -6,7 +6,7 @@ const getStudentsEl = document.querySelector("#get-students-btn")
 
 let currentId = null;
 
-tbodyEl.addEventListener("click", (e) => {
+tbodyEl.addEventListener("click", async (e) => {
   //  const td = e.target.closest("td") 
   //  const currentId = td.parentNode 
   //  const id = currentId.id
@@ -20,8 +20,15 @@ tbodyEl.addEventListener("click", (e) => {
   if (e.target.dataset.action === "delete") {
 
    
+      await deleteStudent(id)
+      const res = await getStudents()
+      renderStudents(res)
+      
+    
 
-    deleteStudent(id).then(() => getStudents()).then(res => renderStudents(res))
+   
+
+    //  deleteStudent(id).then(() => getStudents()).then(res => renderStudents(res))
 
 
     // if (action === "delete") {
@@ -57,9 +64,11 @@ tbodyEl.addEventListener("click", (e) => {
   // })
 
 
-function getStudents() {
-  return fetch("http://localhost:3000/students")
-    .then((response) => response.json())
+async function getStudents() {
+  const res =  await fetch("http://localhost:3000/students")
+  return res.json() 
+  // return fetch("http://localhost:3000/students")
+  //   .then((response) => response.json())
   // .then((post) => console.log(post))
   // .catch((error) => console.log(error));
 }
@@ -88,15 +97,25 @@ function renderStudents(students) {
 
 }
 
-getStudentsEl.addEventListener("click", () => {
-  getStudents().then((res) => {
-    renderStudents(res)
-  })
+getStudentsEl.addEventListener("click", async () => {
+  try {
+const students = await getStudents()
+  renderStudents(students)
+  }
+  catch (error) {
+    console.log(error);
+  }
+  
+
+
+  // getStudents().then((res) => {
+  //   renderStudents(res)
+  // })
 })
 
 //
 
-function addStudent(e) {
+async function addStudent(e) {
 
 
   const options = {
@@ -109,15 +128,19 @@ function addStudent(e) {
     },
   };
 
+  const res = await fetch("http://localhost:3000/students", options)
+  return await res.json()
 
-  return fetch("http://localhost:3000/students", options).then((res) => res.json())
+
+
+  // return fetch("http://localhost:3000/students", options).then((res) => res.json())
 }
 
 //
 
 const { name, age, course, skills, email, isEnrolled } = addStudentFormEl.elements;
 
-addStudentsEl.addEventListener("click", (e) => {
+addStudentsEl.addEventListener("click", async (e) => {
   const data = {
     // id: 4,
     name: name.value,
@@ -129,21 +152,36 @@ addStudentsEl.addEventListener("click", (e) => {
   }
 
   if(currentId) {
-    updateStudent(currentId, data).then(getStudents).then(res => renderStudents(res)).finally(() => {
-      addStudentFormEl.reset()
-      currentId = null
-    });
+
+    await updateStudent(currentId, data)
+    const res = await getStudents()
+    renderStudents(res)
+    addStudentFormEl.reset()
+    currentId = null
+
+
+
+
+    // updateStudent(currentId, data).then(getStudents).then(res => renderStudents(res)).finally(() => {
+    //   addStudentFormEl.reset()
+    //   currentId = null
+    // });
     return
   }
 
   console.log(data);
+
+  await addStudent(data)
+  const res = await getStudents()
+  renderStudents(res)
+  addStudentFormEl.reset()
   
-addStudent(data)
-    .then(getStudents)
-    .then(res => renderStudents(res))
-    .finally(() => {
-      addStudentFormEl.reset();
-    });
+// addStudent(data)
+//     .then(getStudents)
+//     .then(res => renderStudents(res))
+//     .finally(() => {
+//       addStudentFormEl.reset();
+//     });
 
   // addStudent(data)
   //   .then(getStudents())
@@ -155,7 +193,7 @@ addStudent(data)
 
 //
 
-function updateStudent(id, data) {
+async function updateStudent(id, data) {
   const options = {
     method: "PUT",
     body: JSON.stringify(data),
@@ -163,8 +201,12 @@ function updateStudent(id, data) {
       "Content-Type": "application/json; charset=UTF-8",
     },
   };
-  return fetch(`http://localhost:3000/students/${id}`, options)
-  .then(res => res.json())
+
+  const res = await fetch(`http://localhost:3000/students/${id}`, options)
+  return res.json()
+
+  // return fetch(`http://localhost:3000/students/${id}`, options)
+  // .then(res => res.json())
 }
 
 // const superdata = {
